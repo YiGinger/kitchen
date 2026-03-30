@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4707厨房 — 备料系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0F1117;
+    --surface: #181C26;
+    --surface2: #1E2330;
+    --border: #2A2F3E;
+    --accent: #F5A623;
+    --accent2: #E8341A;
+    --green: #3DDC84;
+    --text: #E8EAF0;
+    --muted: #6B7280;
+    --white: #FFFFFF;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans SC', 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-inner {
+    max-width: 1280px; margin: 0 auto;
+    padding: 0 28px; height: 68px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .logo-mark {
+    width: 38px; height: 38px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-label {
+    display: flex; flex-direction: column;
+  }
+  .logo-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 800;
+    color: var(--white); line-height: 1.1;
+  }
+  .logo-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--accent);
+    letter-spacing: 1.5px; text-transform: uppercase;
+  }
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    border: none; border-radius: 10px;
+    cursor: pointer; padding: 9px 18px;
+    display: flex; align-items: center; gap: 7px;
+    transition: all 0.18s;
+  }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    font-weight: 600;
+  }
+  .btn-primary:hover { background: #ffc04a; transform: translateY(-1px); }
+  .btn-primary:disabled { background: var(--border); color: var(--muted); cursor: default; transform: none; }
+  .btn-danger {
+    background: var(--accent2);
+    color: white; font-weight: 600;
+  }
+  .btn-danger:hover { background: #ff5c3e; transform: translateY(-1px); }
+
+  .cart-pill {
+    background: var(--accent2);
+    color: white;
+    border-radius: 20px;
+    padding: 9px 16px;
+    font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; border: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.18s;
+  }
+  .cart-pill:hover { background: #ff5c3e; transform: translateY(-1px); }
+  .pill-count {
+    background: white; color: var(--accent2);
+    border-radius: 50%; width: 20px; height: 20px;
+    font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* LAYOUT */
+  .page { max-width: 1280px; margin: 0 auto; padding: 32px 28px 80px; }
+
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px; font-weight: 800;
+    color: var(--white); margin-bottom: 6px;
+  }
+  .page-sub {
+    font-size: 14px; color: var(--muted); margin-bottom: 28px;
+  }
+
+  /* SEARCH + FILTER */
+  .toolbar {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 24px; align-items: center;
+  }
+  .search-box {
+    flex: 1; min-width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box::placeholder { color: var(--muted); }
+  .search-box:focus { border-color: var(--accent); }
+  .filter-btn {
+    padding: 9px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .filter-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000; font-weight: 600;
+  }
+  .filter-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+
+  /* DISH TABLE */
+  .dish-table {
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .dish-table-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 80px;
+    padding: 12px 20px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 1px;
+    color: var(--muted); text-transform: uppercase;
+  }
+  .dish-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 80px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    transition: background 0.15s;
+    animation: fadeIn 0.3s ease both;
+  }
+  .dish-row:last-child { border-bottom: none; }
+  .dish-row:hover { background: var(--surface2); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .dish-row-name {
+    font-size: 15px; font-weight: 500; color: var(--white);
+  }
+  .dish-row-cat {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; color: var(--muted);
+    margin-top: 2px;
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+  .dish-row-ing {
+    font-size: 12px; color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+  .dish-row-price {
+    font-size: 15px; font-weight: 600;
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+  }
+  .qty-ctrl {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .qbtn {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; line-height: 1;
+  }
+  .qbtn:hover { background: var(--accent); border-color: var(--accent); color: #000; }
+  .qnum {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    min-width: 18px; text-align: center;
+    color: var(--white);
+  }
+  .no-results {
+    padding: 48px 20px; text-align: center;
+    color: var(--muted); font-size: 14px;
+  }
+
+  /* CART DRAWER */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); z-index: 200;
+    backdrop-filter: blur(3px);
+  }
+  .overlay.open { display: block; }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: min(400px, 100vw);
+    background: var(--surface);
+    z-index: 201;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    display: flex; flex-direction: column;
+    border-left: 1px solid var(--border);
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-head {
+    padding: 22px 22px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .drawer-head h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px; font-weight: 800; color: var(--white);
+  }
+  .xbtn {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; width: 34px; height: 34px;
+    color: var(--muted); font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .xbtn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .drawer-body { flex: 1; overflow-y: auto; padding: 16px 22px; }
+  .drawer-empty {
+    text-align: center; padding: 50px 0; color: var(--muted);
+  }
+  .drawer-empty .ei { font-size: 40px; margin-bottom: 10px; }
+
+  .cart-line {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 0; border-bottom: 1px solid var(--border);
+  }
+  .cart-line:last-child { border-bottom: none; }
+  .cl-name { font-size: 14px; font-weight: 500; color: var(--white); }
+  .cl-price { font-size: 12px; color: var(--accent); font-family: 'DM Mono', monospace; margin-top: 2px; }
+  .cl-qty { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+
+  .drawer-foot {
+    padding: 16px 22px 22px;
+    border-top: 1px solid var(--border);
+  }
+  .total-row {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 14px;
+  }
+  .total-label { font-size: 13px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .total-amt { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--accent); }
+
+  /* INGREDIENTS PANEL */
+  .ing-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-top: 32px;
+    overflow: hidden;
+    animation: fadeIn 0.4s ease both;
+  }
+  .ing-panel-head {
+    background: var(--surface2);
+    padding: 18px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .ing-panel-head h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px; font-weight: 800; color: var(--white);
+  }
+  .ing-panel-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .ing-tabs {
+    display: flex; gap: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .ing-tab {
+    padding: 14px 24px;
+    background: none; border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 500;
+    color: var(--muted); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .ing-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .ing-tab:hover:not(.active) { color: var(--text); }
+
+  .ing-content { padding: 24px; }
+
+  /* COMBINED VIEW */
+  .combined-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .ing-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex; flex-direction: column; gap: 4px;
+    transition: border-color 0.15s;
+  }
+  .ing-chip:hover { border-color: var(--accent); }
+  .ing-chip-name {
+    font-size: 14px; font-weight: 500; color: var(--white);
+  }
+  .ing-chip-qty {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; color: var(--accent);
+  }
+  .ing-chip-dishes {
+    font-size: 11px; color: var(--muted); margin-top: 2px;
+  }
+
+  /* PER-DISH VIEW */
+  .per-dish-list { display: flex; flex-direction: column; gap: 16px; }
+  .pdish-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+  }
+  .pdish-head {
+    padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .pdish-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 700; color: var(--white);
+  }
+  .pdish-qty-tag {
+    background: var(--accent);
+    color: #000; font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+  }
+  .pdish-ings {
+    padding: 12px 16px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .ing-tag {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px; color: var(--text);
+    font-family: 'DM Mono', monospace;
+  }
+  .ing-tag .amt { color: var(--accent); margin-left: 4px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(70px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 11px 22px;
+    border-radius: 30px;
+    font-size: 13px; font-weight: 500;
+    z-index: 400; white-space: nowrap;
+    pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: var(--shadow);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* CONFIRM MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); z-index: 300;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 32px;
+    max-width: 360px; width: 90%;
+    text-align: center;
+    animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0.85); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  .modal-icon { font-size: 48px; margin-bottom: 14px; }
+  .modal-box h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 800;
+    color: var(--white); margin-bottom: 8px;
+  }
+  .modal-box p { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark">🍳</div>
+      <div class="logo-label">
+        <span class="logo-name">4707厨房</span>
+        <span class="logo-sub">备料管理系统</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" id="clearBtn" onclick="clearCart()" style="display:none">✕ 清空</button>
+      <button class="cart-pill" onclick="openCart()">
+        🧺 备料单
+        <span class="pill-count" id="cartCount">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="page">
+  <h1 class="page-title">选择菜品</h1>
+  <p class="page-sub">将菜品加入备料单，提交后查看所需食材清单。</p>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <input class="search-box" type="text" id="searchBox" placeholder="🔍  搜索菜品…" oninput="renderTable()">
+    <button class="filter-btn active" onclick="setFilter('all', this)">全部</button>
+    <button class="filter-btn" onclick="setFilter('pork', this)">猪肉</button>
+    <button class="filter-btn" onclick="setFilter('beef', this)">牛肉</button>
+    <button class="filter-btn" onclick="setFilter('lamb', this)">羊肉</button>
+    <button class="filter-btn" onclick="setFilter('poultry', this)">家禽</button>
+    <button class="filter-btn" onclick="setFilter('seafood', this)">海鲜</button>
+    <button class="filter-btn" onclick="setFilter('veg', this)">素菜</button>
+  </div>
+
+  <!-- DISH TABLE -->
+  <div class="dish-table">
+    <div class="dish-table-header">
+      <span>菜品名称</span>
+      <span>食材数量</span>
+      <span>份数</span>
+    </div>
+    <div id="dishTableBody"></div>
+  </div>
+
+  <!-- INGREDIENTS PANEL (hidden until submit) -->
+  <div class="ing-panel" id="ingPanel" style="display:none">
+    <div class="ing-panel-head">
+      <div>
+        <h2>🥬 所需食材</h2>
+        <div class="ing-panel-sub" id="ingPanelSub"></div>
+      </div>
+      <button class="btn btn-ghost" onclick="document.getElementById('ingPanel').style.display='none'">隐藏</button>
+    </div>
+    <div class="ing-tabs">
+      <button class="ing-tab active" onclick="switchIngTab('combined', this)">汇总清单</button>
+      <button class="ing-tab" onclick="switchIngTab('perdish', this)">按菜分列</button>
+    </div>
+    <div class="ing-content" id="ingContent"></div>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
+
+<!-- CART DRAWER -->
+<div class="drawer" id="cartDrawer">
+  <div class="drawer-head">
+    <h2>🧺 备料单</h2>
+    <button class="xbtn" onclick="closeCart()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-foot">
+    <div class="total-row">
+      <span class="total-label">已选菜品</span>
+      <span class="total-amt" id="drawerTotal">0</span>
+    </div>
+    <button class="btn btn-danger" id="submitBtn" style="width:100%;justify-content:center;font-size:15px;padding:14px;" onclick="submitOrder()" disabled>
+      提交并查看食材 →
+    </button>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <div class="modal-icon">✅</div>
+    <h2>已提交备料单！</h2>
+    <p id="confirmMsg"></p>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeConfirm(true)">查看食材</button>
+      <button class="btn btn-ghost" onclick="closeConfirm(false)">完成</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const DISHES = [
+  // 猪肉
+  { id:1,  name:"猪肉糖醋排骨", cat:"pork",
+    ingredients:[{name:"排骨"},{name:"白糖"},{name:"醋"},{name:"酱油"},{name:"葱"},{name:"姜"}]},
+  { id:2,  name:"豉汁蒸排骨", cat:"pork",
+    ingredients:[{name:"排骨"},{name:"豆豉"},{name:"酱油"},{name:"葱"}]},
+  { id:3,  name:"炸排骨", cat:"pork",
+    ingredients:[{name:"排骨"},{name:"油"},{name:"盐"},{name:"面包糠"}]},
+  { id:4,  name:"红烧土豆排骨", cat:"pork",
+    ingredients:[{name:"排骨"},{name:"土豆"},{name:"酱油"},{name:"桂皮"},{name:"八角"},{name:"香叶"}]},
+  { id:5,  name:"酸菜炖排骨", cat:"pork",
+    ingredients:[{name:"排骨"},{name:"酸菜丝（阜盈牌）"}]},
+  { id:6,  name:"玉米藕片排骨汤", cat:"pork",
+    ingredients:[{name:"排骨"},{name:"玉米"},{name:"新鲜藕"}]},
+  { id:7,  name:"红烧汤骨", cat:"pork",
+    ingredients:[{name:"汤骨"},{name:"酱油"},{name:"桂皮"},{name:"八角"},{name:"香叶"}]},
+  { id:8,  name:"水煮肉片", cat:"pork",
+    ingredients:[{name:"里脊肉"},{name:"豆瓣酱"},{name:"玉米淀粉"},{name:"蔬菜（豆芽/金针菇/白菜）"},{name:"面"}]},
+  { id:9,  name:"京酱肉丝", cat:"pork",
+    ingredients:[{name:"里脊肉丝"},{name:"甜面酱"},{name:"糖"},{name:"盐"},{name:"豆皮"},{name:"黄瓜"}]},
+  { id:10, name:"烤五花肉 / 红烧肉", cat:"pork",
+    ingredients:[{name:"五花肉"},{name:"鹌鹑蛋"},{name:"酱油"},{name:"葱"},{name:"姜"},{name:"桂皮"},{name:"八角"},{name:"香叶"}]},
+  { id:11, name:"猪肉馅包子", cat:"pork",
+    ingredients:[{name:"猪肉末"},{name:"生姜"},{name:"中筋面粉"},{name:"酵母"}]},
+
+  // 牛肉
+  { id:12, name:"牛仔骨", cat:"beef",
+    ingredients:[{name:"牛仔骨"}]},
+  { id:13, name:"炖牛肉（大华牛肉）", cat:"beef",
+    ingredients:[{name:"炖牛肉"},{name:"土豆"},{name:"桂皮"},{name:"八角"},{name:"香叶"},{name:"葱"},{name:"姜"}]},
+  { id:14, name:"葱爆牛肉", cat:"beef",
+    ingredients:[{name:"牛肉片"},{name:"大葱"}]},
+  { id:15, name:"牛排", cat:"beef",
+    ingredients:[{name:"牛排"},{name:"迷迭香"},{name:"黄油"},{name:"黑胡椒"}]},
+  { id:16, name:"牛尾汤", cat:"beef",
+    ingredients:[{name:"牛尾"},{name:"西红柿"}]},
+  { id:17, name:"腐竹烧牛尾", cat:"beef",
+    ingredients:[{name:"牛尾"},{name:"腐竹"},{name:"酱油"},{name:"花椒"},{name:"桂皮"},{name:"八角"},{name:"香叶"}]},
+
+  // 羊肉
+  { id:18, name:"孜然羊肉", cat:"lamb",
+    ingredients:[{name:"羊肉片"},{name:"孜然"},{name:"酱油"}]},
+  { id:19, name:"葱爆羊肉", cat:"lamb",
+    ingredients:[{name:"羊肉片"},{name:"葱"}]},
+  { id:20, name:"烤羊排", cat:"lamb",
+    ingredients:[{name:"羊排"}]},
+
+  // 家禽
+  { id:21, name:"葱油鸡", cat:"poultry",
+    ingredients:[{name:"鸡腿（带骨）"},{name:"葱"}]},
+  { id:22, name:"白切鸡", cat:"poultry",
+    ingredients:[{name:"鸡腿（带骨）"}]},
+  { id:23, name:"麻辣香锅", cat:"poultry",
+    ingredients:[{name:"麻辣香锅调料"},{name:"鸡翅"},{name:"千页豆腐"},{name:"西兰花"},{name:"虾"},{name:"莴笋"}]},
+  { id:24, name:"新奥尔良烤鸡翅", cat:"poultry",
+    ingredients:[{name:"鸡中翅"},{name:"烤鸡粉"}]},
+  { id:25, name:"可乐鸡翅", cat:"poultry",
+    ingredients:[{name:"鸡翅"},{name:"可乐"}]},
+  { id:26, name:"卤鸡翅", cat:"poultry",
+    ingredients:[{name:"鸡翅"},{name:"酱油"},{name:"桂皮"},{name:"八角"},{name:"香叶"}]},
+  { id:27, name:"炸鸡排", cat:"poultry",
+    ingredients:[{name:"鸡排"}]},
+  { id:28, name:"鸡汤", cat:"poultry",
+    ingredients:[{name:"整只鸡"}]},
+  { id:29, name:"香菇炖鸡腿肉", cat:"poultry",
+    ingredients:[{name:"鸡腿"},{name:"香菇"},{name:"红薯粉丝"},{name:"酱油"}]},
+  { id:30, name:"北京烤鸭", cat:"poultry",
+    ingredients:[{name:"整只肥鸭"},{name:"麦芽糖"},{name:"醋"},{name:"苹果"},{name:"烤盘架"},{name:"深口酒瓶"}]},
+  { id:31, name:"大盘鸡", cat:"poultry",
+    ingredients:[{name:"切块鸡腿"},{name:"土豆"},{name:"手擀面"},{name:"大盘鸡调味料"}]},
+
+  // 海鲜
+  { id:32, name:"清蒸鲈鱼", cat:"seafood",
+    ingredients:[{name:"开背鲈鱼"}]},
+  { id:33, name:"蒜蓉青口", cat:"seafood",
+    ingredients:[{name:"青口"},{name:"蒜"}]},
+  { id:34, name:"蒜蓉粉丝蒸蛏子", cat:"seafood",
+    ingredients:[{name:"蛏子"},{name:"蒜"},{name:"粉丝"}]},
+  { id:35, name:"豉汁蒸三文鱼", cat:"seafood",
+    ingredients:[{name:"三文鱼"},{name:"豆豉"}]},
+  { id:36, name:"葱油三文鱼", cat:"seafood",
+    ingredients:[{name:"三文鱼"},{name:"葱"}]},
+  { id:37, name:"海鲜炒饭", cat:"seafood",
+    ingredients:[{name:"小鱿鱼（Wholefoods）"},{name:"肉末"},{name:"剩饭"}]},
+  { id:38, name:"油闷大虾", cat:"seafood",
+    ingredients:[{name:"有头虾"},{name:"醋"},{name:"糖"},{name:"酱油"}]},
+  { id:39, name:"萝卜丝虾汤", cat:"seafood",
+    ingredients:[{name:"有头虾"},{name:"白萝卜"}]},
+  { id:40, name:"红烧黄花鱼", cat:"seafood",
+    ingredients:[{name:"黄花鱼"},{name:"酱油"}]},
+  { id:41, name:"炸小黄花鱼", cat:"seafood",
+    ingredients:[{name:"黄花鱼"},{name:"面粉"},{name:"淀粉"}]},
+  { id:42, name:"水煮鱼片", cat:"seafood",
+    ingredients:[{name:"新鲜鱼"},{name:"水煮鱼调料"}]},
+  { id:43, name:"虾仁滑蛋", cat:"seafood",
+    ingredients:[{name:"虾仁"},{name:"蛋"}]},
+  { id:44, name:"响油鳝丝", cat:"seafood",
+    ingredients:[{name:"鳝丝"},{name:"酱油"},{name:"葱"}]},
+
+  // 素菜
+  { id:45, name:"香干白菜", cat:"veg",
+    ingredients:[{name:"香干"},{name:"白菜"},{name:"料酒"}]},
+  { id:46, name:"麻婆豆腐", cat:"veg",
+    ingredients:[{name:"嫩豆腐"},{name:"辣豆瓣酱"},{name:"肉末"}]},
+  { id:47, name:"肉末茄子", cat:"veg",
+    ingredients:[{name:"茄子"},{name:"肉末"},{name:"葱"}]},
+  { id:48, name:"肉末炒包菜", cat:"veg",
+    ingredients:[{name:"包菜"},{name:"肉末"}]},
+  { id:49, name:"青椒肉丝", cat:"veg",
+    ingredients:[{name:"青椒"},{name:"肉丝"},{name:"生粉"},{name:"小苏打"}]},
+  { id:50, name:"西红柿炒蛋", cat:"veg",
+    ingredients:[{name:"西红柿"},{name:"鸡蛋"},{name:"番茄酱"}]},
+  { id:51, name:"西葫芦炒蛋", cat:"veg",
+    ingredients:[{name:"西葫芦"},{name:"鸡蛋"}]},
+  { id:52, name:"韭菜炒蛋", cat:"veg",
+    ingredients:[{name:"韭菜"},{name:"鸡蛋"}]},
+];
+
+const CAT_LABELS = { 'all':'全部','pork':'猪肉','beef':'牛肉','lamb':'羊肉','poultry':'家禽','seafood':'海鲜','veg':'素菜' };
+
+let cart = {};       // { dishId: qty }
+let activeFilter = 'all';
+let activeIngTab = 'combined';
+let lastOrder = null;
+
+/* ── FILTER ── */
+function setFilter(cat, btn) {
+  activeFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+/* ── TABLE ── */
+function renderTable() {
+  const q = document.getElementById('searchBox').value.toLowerCase();
+  const filtered = DISHES.filter(d =>
+    (activeFilter === 'all' || d.cat === activeFilter) &&
+    (!q || d.name.toLowerCase().includes(q))
+  );
+  const body = document.getElementById('dishTableBody');
+  if (!filtered.length) {
+    body.innerHTML = `<div class="no-results">未找到相关菜品。</div>`;
+    return;
+  }
+  body.innerHTML = filtered.map((d, i) => `
+    <div class="dish-row" style="animation-delay:${i*0.03}s">
+      <div>
+        <div class="dish-row-name">${d.name}</div>
+        <div class="dish-row-cat">${CAT_LABELS[d.cat]}</div>
+      </div>
+      <div class="dish-row-ing">${d.ingredients.length} 种食材</div>
+      <div class="qty-ctrl">
+        <button class="qbtn" onclick="changeQty(${d.id},-1)">−</button>
+        <span class="qnum" id="qnum-${d.id}">${cart[d.id]||0}</span>
+        <button class="qbtn" onclick="changeQty(${d.id},1)">+</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ── CART ── */
+function changeQty(id, delta) {
+  cart[id] = (cart[id] || 0) + delta;
+  if (cart[id] <= 0) delete cart[id];
+  const el = document.getElementById(`qnum-${id}`);
+  if (el) el.textContent = cart[id] || 0;
+  updateCartMeta();
+  if (delta > 0) showToast(`已添加 ${DISHES.find(d=>d.id===id).name}`);
+}
+
+function updateCartMeta() {
+  const total = Object.values(cart).reduce((s,v)=>s+v,0);
+  document.getElementById('cartCount').textContent = total;
+  document.getElementById('submitBtn').disabled = total === 0;
+  document.getElementById('clearBtn').style.display = total > 0 ? 'flex' : 'none';
+  renderDrawer();
+}
+
+function renderDrawer() {
+  const body = document.getElementById('drawerBody');
+  const entries = Object.entries(cart);
+  const total = entries.reduce((s,[,q])=>s+q,0);
+  document.getElementById('drawerTotal').textContent = total + ' 道菜';
+
+  if (!entries.length) {
+    body.innerHTML = `<div class="drawer-empty"><div class="ei">🥢</div><p>还未选择任何菜品。</p></div>`;
+    return;
+  }
+  body.innerHTML = entries.map(([id, qty]) => {
+    const d = DISHES.find(x=>x.id==id);
+    return `
+      <div class="cart-line">
+        <div>
+          <div class="cl-name">${d.name}</div>
+        </div>
+        <div class="cl-qty">
+          <button class="qbtn" onclick="changeQty(${d.id},-1)">−</button>
+          <span class="qnum">${qty}</span>
+          <button class="qbtn" onclick="changeQty(${d.id},1)">+</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openCart()  { document.getElementById('cartDrawer').classList.add('open'); document.getElementById('overlay').classList.add('open'); renderDrawer(); }
+function closeCart() { document.getElementById('cartDrawer').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+
+function clearCart() {
+  cart = {};
+  document.querySelectorAll('.qnum').forEach(el => el.textContent = '0');
+  updateCartMeta();
+  showToast('已清空备料单');
+}
+
+/* ── SUBMIT ── */
+function submitOrder() {
+  const entries = Object.entries(cart);
+  if (!entries.length) return;
+  lastOrder = entries.map(([id,qty]) => ({ dish: DISHES.find(d=>d.id==id), qty }));
+  const names = lastOrder.map(o=>`${o.dish.name} ×${o.qty}`).join('、');
+  document.getElementById('confirmMsg').textContent = `已选 ${lastOrder.length} 种菜品：${names}`;
+  document.getElementById('confirmModal').classList.add('open');
+  closeCart();
+}
+
+function closeConfirm(viewIng) {
+  document.getElementById('confirmModal').classList.remove('open');
+  if (viewIng && lastOrder) {
+    renderIngredients();
+    document.getElementById('ingPanel').style.display = 'block';
+    setTimeout(() => document.getElementById('ingPanel').scrollIntoView({ behavior:'smooth', block:'start' }), 100);
+  }
+}
+
+/* ── INGREDIENTS ── */
+function switchIngTab(tab, btn) {
+  activeIngTab = tab;
+  document.querySelectorAll('.ing-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderIngredients();
+}
+
+function renderIngredients() {
+  if (!lastOrder) return;
+  const totalDishes = lastOrder.reduce((s,o)=>s+o.qty,0);
+  document.getElementById('ingPanelSub').textContent =
+    `共 ${lastOrder.length} 种菜品 · ${totalDishes} 份`;
+
+  if (activeIngTab === 'combined') renderCombined();
+  else renderPerDish();
+}
+
+function renderCombined() {
+  // Aggregate all ingredients across all dishes × qty
+  const map = {};
+  lastOrder.forEach(({ dish, qty }) => {
+    dish.ingredients.forEach(ing => {
+      const key = ing.name.toLowerCase();
+      if (!map[key]) map[key] = { name: ing.name, qty: 0, dishes: [] };
+      map[key].qty += qty;
+      if (!map[key].dishes.includes(dish.name)) map[key].dishes.push(dish.name);
+    });
+  });
+
+  const sorted = Object.values(map).sort((a,b) => a.name.localeCompare(b.name));
+  document.getElementById('ingContent').innerHTML = `
+    <div class="combined-grid">
+      ${sorted.map(ing => `
+        <div class="ing-chip">
+          <div class="ing-chip-name">${ing.name}</div>
+          <div class="ing-chip-qty">${ing.dishes.length > 1 ? `${ing.dishes.length} 道菜使用` : ''}</div>
+          <div class="ing-chip-dishes">见于：${ing.dishes.join('、')}</div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function renderPerDish() {
+  document.getElementById('ingContent').innerHTML = `
+    <div class="per-dish-list">
+      ${lastOrder.map(({ dish, qty }) => `
+        <div class="pdish-card">
+          <div class="pdish-head">
+            <span class="pdish-name">${dish.name}</span>
+            <span class="pdish-qty-tag">×${qty} 份</span>
+          </div>
+          <div class="pdish-ings">
+            ${dish.ingredients.map(ing => `
+              <span class="ing-tag">${ing.name}</span>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+/* ── TOAST ── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// Init
+renderTable();
+updateCartMeta();
+</script>
+</body>
+</html>
